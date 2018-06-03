@@ -3,7 +3,12 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import Article from './article'
 import accordion from '../decorators/accordion'
-import { filtratedArticlesSelector } from '../selectors'
+import {
+  filtratedArticlesSelector,
+  loadingArticlesSelector
+} from '../selectors'
+import { loadAllArticles } from '../ac'
+import Loader from './common/loader'
 
 export class ArticleList extends Component {
   static propTypes = {
@@ -14,18 +19,21 @@ export class ArticleList extends Component {
     toggleItem: PropTypes.func
   }
 
-  componentWillMount() {
-    this.props.fetchData && this.props.fetchData()
+  constructor(props) {
+    super(props)
+    props.fetchData && props.fetchData()
   }
 
   render() {
-    console.log('---', 'rerendering')
-    const articleElements = this.props.articles.map((article) => (
+    const { articles, loading, openItemId, toggleOpenItem } = this.props
+    if (loading) return <Loader />
+
+    const articleElements = articles.map((article) => (
       <li key={article.id} className="test__article-list_item">
         <Article
           article={article}
-          isOpen={article.id === this.props.openItemId}
-          toggleOpen={this.props.toggleOpenItem}
+          isOpen={article.id === openItemId}
+          toggleOpen={toggleOpenItem}
         />
       </li>
     ))
@@ -34,9 +42,10 @@ export class ArticleList extends Component {
   }
 }
 
-export default connect((state) => {
-  console.log('---', 'connect')
-  return {
-    articles: filtratedArticlesSelector(state)
-  }
-})(accordion(ArticleList))
+export default connect(
+  (state) => ({
+    articles: filtratedArticlesSelector(state),
+    loading: loadingArticlesSelector(state)
+  }),
+  { fetchData: loadAllArticles }
+)(accordion(ArticleList))
