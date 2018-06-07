@@ -12,7 +12,7 @@ export const articleListSelector = createSelector(
 export const loadingArticlesSelector = (state) => state.articles.loading
 
 const filtersSelector = (state) => state.filters
-const commentListSelector = (state) => state.comments
+const commentListSelector = (state) => state.comments.entities
 export const filtersSelectionSelector = createSelector(
   filtersSelector,
   (filters) => filters.selected

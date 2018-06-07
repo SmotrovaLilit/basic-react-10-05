@@ -5,13 +5,40 @@ import Comment from '../comment'
 import CommentForm from '../comment-form'
 import toggleOpen from '../../decorators/toggleOpen'
 import './style.css'
+import { loadComments } from '../../ac'
+import { connect } from 'react-redux'
+import Loader from '../common/loader'
 
 class CommentList extends Component {
   static propTypes = {
-    article: PropTypes.object.isRequired,
+    article: PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      text: PropTypes.string,
+      comments: PropTypes.array,
+      loadingComments: PropTypes.bool,
+      loadedComments: PropTypes.bool
+    }).isRequired,
     //from toggleOpen decorator
     isOpen: PropTypes.bool,
-    toggleOpen: PropTypes.func
+    toggleOpen: PropTypes.func,
+    loadComments: PropTypes.func
+  }
+
+  state = {
+    hasError: false
+  }
+
+  componentDidCatch() {
+    this.setState({
+      hasError: true
+    })
+  }
+
+  componentDidUpdate(oldProps) {
+    const { isOpen, loadComments, article } = this.props
+    if (!oldProps.isOpen && isOpen && !article.loadedComments)
+      loadComments(article.id)
   }
 
   render() {
@@ -36,9 +63,14 @@ class CommentList extends Component {
   getBody() {
     const {
       article: { comments = [], id },
-      isOpen
+      isOpen,
+      article
     } = this.props
     if (!isOpen) return null
+
+    if (this.state.hasError) return <h3>Some Error</h3>
+    if (article.loadingComments) return <Loader />
+    if (!article.loadedComments) return
 
     return (
       <div className="test__comment-list--body">
@@ -65,4 +97,4 @@ class CommentList extends Component {
   }
 }
 
-export default toggleOpen(CommentList)
+export default connect(null, { loadComments })(toggleOpen(CommentList))
