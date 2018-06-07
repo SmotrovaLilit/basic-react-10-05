@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react'
 import CSSTransition from 'react-addons-css-transition-group'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
+import { articleSelector } from '../../selectors'
 import CommentList from '../comment-list'
 import Loader from '../common/loader'
 import { deleteArticle, loadArticle } from '../../ac'
@@ -9,14 +10,16 @@ import './article.css'
 
 class Article extends PureComponent {
   static propTypes = {
+    id: PropTypes.string,
+
     article: PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      title: PropTypes.string.isRequired,
+      id: PropTypes.string,
+      title: PropTypes.string,
       text: PropTypes.string,
       comments: PropTypes.array
-    }).isRequired,
+    }),
     isOpen: PropTypes.bool,
-    toggleOpen: PropTypes.func.isRequired,
+    toggleOpen: PropTypes.func,
     deleteArticle: PropTypes.func
   }
 
@@ -30,15 +33,16 @@ class Article extends PureComponent {
     })
   }
 
-  componentDidUpdate(oldProps) {
-    const { isOpen, loadArticle, article } = this.props
-
-    if (!oldProps.isOpen && isOpen && !article.text && !article.loading)
-      loadArticle(article.id)
+  constructor(props) {
+    super(props)
+    const { loadArticle, article, id } = this.props
+    if (!article || (!article.text && !article.loading)) loadArticle(id)
   }
 
   render() {
     const { article, isOpen } = this.props
+    if (!article) return null
+
     return (
       <div>
         <h2>{article.title}</h2>
@@ -81,4 +85,9 @@ class Article extends PureComponent {
   }
 }
 
-export default connect(null, { deleteArticle, loadArticle })(Article)
+export default connect(
+  (state, ownProps) => ({
+    article: articleSelector(state, ownProps)
+  }),
+  { deleteArticle, loadArticle }
+)(Article)
